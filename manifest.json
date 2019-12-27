@@ -1,0 +1,7 @@
+{
+  "name": "Wlingua CM SVG",
+  "id": "792464620998285156",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html"
+}
