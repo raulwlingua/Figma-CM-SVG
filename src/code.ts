@@ -18,6 +18,12 @@ figma.ui.onmessage = msg => {
     case 'create-voc':
       createVoc(msg.vocId, msg.position, msg.title, msg.wordClass, msg.svg);
       break;
+    case 'get-export-vocIds':
+      getExportSvg();
+      break;
+    case 'get-vocId-svg':
+      getVocSvg(msg.vocId);
+      break;
     default:
       return;
   }
@@ -168,4 +174,45 @@ const whiteBackground = (frameNode: FrameNode) => {
     }
   });
   frameNode.backgroundStyleId = backgroundStyle.id;
+};
+
+const getExportSvg = () => {
+  const vocIds: number[] = [];
+  figma.root.findAll((node: BaseNode) => node.type === 'FRAME').
+  forEach((frameNode: FrameNode) => {
+    vocIds.push(parseInt(frameNode.name));
+  });
+
+  figma.ui.postMessage({
+    type: 'got-export-vocIds',
+    vocIds,
+  });
+};
+
+const getVocSvg = (vocId: number) => {
+  let frameNode: FrameNode;
+  figma.root.findAll((node: BaseNode) => node.type === 'FRAME').
+  forEach((fn: FrameNode) => {
+    if ( vocId === parseInt(fn.name)) {
+      frameNode = fn;
+    }
+  });
+
+  let svg: string = '';
+  if (frameNode) {
+    frameNode.exportAsync({format: "SVG",svgIdAttribute: true}).then((result) => {
+      svg = String.fromCharCode.apply(null, new Uint16Array(result));
+      figma.ui.postMessage({
+        type: 'got-vocId-svg',
+        svg,
+      });
+    });
+  }else{
+    figma.ui.postMessage({
+      type: 'got-vocId-svg',
+      svg,
+    });
+  }
+
+
 };

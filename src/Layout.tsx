@@ -1,6 +1,7 @@
 import * as React from 'react'
 import './ui.css'
 import Import from "./Import";
+import Export from "./Export";
 
 enum ETabs {
   NONE = 'NONE',
@@ -46,6 +47,8 @@ export default class Layout extends React.Component<{}, state> {
         );
       case ETabs.IMPORT:
         return <Import />
+      case ETabs.EXPORT:
+        return <Export />
       default:
         return null;
     }
