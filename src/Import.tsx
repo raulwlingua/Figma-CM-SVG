@@ -6,6 +6,7 @@ import {CM_URL} from "./config";
 type state = {
   doing: string;
   importedCat: number;
+  catIds: number[];
   cats: ICategoryApi[];
   importedVoc: number;
   vocs: IVocApi[];
@@ -32,6 +33,7 @@ export default class Import extends React.Component<{}, state> {
     this.state = {
       doing: 'Loading categories.',
       importedCat: -1,
+      catIds: [],
       cats: [],
       importedVoc: -1,
       vocs: [],
@@ -41,11 +43,9 @@ export default class Import extends React.Component<{}, state> {
 
   componentDidMount = async () => {
     window.addEventListener("message", this.onMessage, {});
-    const response = await axios.get(CM_URL + '/voc-categories/dialects/0');
-    let categories: ICategoryApi[] = response.data;
-    categories = categories.sort( (a, b) => a.fullPath < b.fullPath ? -1 : 1);
-    this.setState( {cats: categories });
-    this.importNextCat();
+    parent.postMessage({ pluginMessage: {
+        type: 'get-catIds',
+      }}, '*');
   };
 
   componentWillUnmount(): void {
@@ -53,6 +53,11 @@ export default class Import extends React.Component<{}, state> {
   }
 
   onMessage = (ev: MessageEvent) => {
+    if (ev.data.pluginMessage.type === 'got-catIds') {
+      this.setState({ catIds: ev.data.pluginMessage.catIds});
+      this.loadCats();
+    }
+
     if (ev.data.pluginMessage.type === 'created-cat') {
       this.setState({ pageVocIds: ev.data.pluginMessage.pageVocIds});
       this.importNextVoc();
@@ -60,6 +65,15 @@ export default class Import extends React.Component<{}, state> {
     if (ev.data.pluginMessage.type === 'created-voc') {
       this.importNextVoc();
     }
+  };
+
+  loadCats = async () => {
+    const response = await axios.get(CM_URL + '/voc-categories/dialects/0');
+    let categories: ICategoryApi[] = response.data;
+    categories = categories.filter(cat => this.state.catIds.indexOf(cat.id) !== -1);
+    categories = categories.sort( (a, b) => a.fullPath < b.fullPath ? -1 : 1);
+    this.setState( {cats: categories });
+    this.importNextCat();
   };
 
   importNextCat = async () => {

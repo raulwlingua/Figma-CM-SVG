@@ -18,16 +18,6 @@ class App extends React.Component<{}, state> {
     };
   }
 
-  componentDidMount(): void {
-    window.addEventListener("message", this.onMessage, {});
-  }
-  componentWillUnmount(): void {
-    window.removeEventListener("message", this.onMessage);
-  }
-
-  onMessage = (ev: MessageEvent) => {
-  };
-
   onLogin = () => {
     this.setState({ logged: true });
   };

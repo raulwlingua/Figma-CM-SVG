@@ -3,11 +3,15 @@ const VOC_HEIGHT = 380;
 const MARGIN_H = 100;
 const MARGIN_V = 200;
 const VOC_PER_ROW = 5;
+const TEXT_STYLE_NAME = 'Description';
 
 figma.showUI(__html__, {width: 400, height: 300});
 
 figma.ui.onmessage = msg => {
   switch (msg.type) {
+    case 'get-catIds':
+      getCatIds();
+      break;
     case 'create-cat':
       createCat(msg.catId, msg.catName);
       break;
@@ -21,6 +25,45 @@ figma.ui.onmessage = msg => {
 
 let pageVocIds: number[] = [];
 let pageNode: PageNode;
+let textStyle: TextStyle = null;
+const backgroundStyle: PaintStyle = figma.createPaintStyle();
+backgroundStyle.name = 'white background';
+const white: SolidPaint = {
+  type: 'SOLID',
+  color: {r: 1, g: 1, b: 1},
+};
+backgroundStyle.paints = [white];
+
+figma.loadFontAsync({ family: "Roboto", style: "Regular" }).then(() => {
+  figma.getLocalTextStyles().forEach(ts => {
+    if (ts.name === TEXT_STYLE_NAME) {
+      textStyle = ts;
+    }
+  });
+  if (!textStyle) {
+    textStyle = figma.createTextStyle();
+    textStyle.fontSize= 22;
+    textStyle.name = TEXT_STYLE_NAME;
+  }
+});
+
+
+const getCatIds = () => {
+  let catIds: number[] = [];
+
+  figma.root
+    .findAll((node: BaseNode) => node.type === 'TEXT')
+    .forEach((textNode: TextNode) => {
+      if (textNode.name === 'catIds') {
+        catIds = textNode.characters.split(',').map(catId => parseInt(catId.trim()));
+      }
+    });
+
+  figma.ui.postMessage({
+    type: 'got-catIds',
+    catIds
+  });
+};
 
 const createCat = (catId: number, catName: string) => {
   pageNode = pageExists(catId);
@@ -43,10 +86,12 @@ const pageExists = (catId: number) => {
     }
   });
   pageVocIds = [];
-  pageFound.findAll((node: BaseNode) => node.type === 'FRAME').
-  forEach((frameNode: FrameNode) => {
-    pageVocIds.push(parseInt(frameNode.name));
-  });
+  if (pageFound) {
+    pageFound.findAll((node: BaseNode) => node.type === 'FRAME').
+    forEach((frameNode: FrameNode) => {
+      pageVocIds.push(parseInt(frameNode.name));
+    });
+  }
 
   return pageFound;
 };
@@ -79,6 +124,29 @@ const  createVoc = (
   frameNode.resize(VOC_WIDTH, VOC_HEIGHT);
   pageVocIds.push(vocId);
 
+  let textNode = figma.createText();
+  textNode.x = x;
+  textNode.y = y + VOC_HEIGHT + 10;
+  textNode.textStyleId = textStyle.id;
+  textNode.characters = wordClass;
+
+  textNode = figma.createText();
+  textNode.x = x;
+  textNode.y = y + VOC_HEIGHT + 50;
+  textNode.textStyleId = textStyle.id;
+  textNode.characters = title;
+
+  if (position < 1000) {
+    textNode = figma.createText();
+    textNode.x = x + VOC_WIDTH;
+    textNode.y = y + VOC_HEIGHT + 10;
+    textNode.textStyleId = textStyle.id;
+    textNode.textAlignHorizontal = 'RIGHT';
+    textNode.characters = position.toString();
+  }
+
+  whiteBackground(frameNode);
+
   figma.ui.postMessage({
     type: 'created-voc',
   });
@@ -89,4 +157,15 @@ const getFramePos = () => {
   const column = pageVocIds.length % VOC_PER_ROW;
 
   return [column * (VOC_WIDTH + MARGIN_H), row * (VOC_HEIGHT + MARGIN_V)];
+};
+
+const whiteBackground = (frameNode: FrameNode) => {
+  let found = false;
+  frameNode.findAll((node => node.type === 'GROUP')).forEach(groupNode => {
+    if (!found && groupNode.name.toLowerCase() === 'background') {
+      groupNode.remove();
+      found = true;
+    }
+  });
+  frameNode.backgroundStyleId = backgroundStyle.id;
 };
