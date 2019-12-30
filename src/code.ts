@@ -117,7 +117,7 @@ const  createVoc = (
   svg: string
 ) => {
   let frameNode: FrameNode;
-  if (svg.indexOf('<html>') !== -1) {
+  if (svg === '' || svg.indexOf('<html>') !== -1) {
     //not valid svg
     frameNode = figma.createFrame();
   } else {

@@ -116,9 +116,14 @@ export default class Import extends React.Component<{}, state> {
     if (this.state.pageVocIds.indexOf(voc.id) !== -1) {
       this.importNextVoc();
     } else {
-      const response = await axios.get(voc.svg);
-      const svg = response.data;
-      console.log(svg);
+      let svg = '';
+      try {
+        const response = await axios.get(voc.svg);
+        svg = response.data;
+      } catch (e) {
+        console.log(e)
+      }
+
       parent.postMessage({ pluginMessage: {
           type: 'create-voc',
           vocId: voc.id,
