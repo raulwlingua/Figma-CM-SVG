@@ -7,6 +7,7 @@ type state = {
   doing: string;
   exportedVoc: number;
   vocIds: number[];
+  errors: string[];
 }
 
 export default class Export extends React.Component<{}, state> {
@@ -17,6 +18,7 @@ export default class Export extends React.Component<{}, state> {
       doing: 'Loading voc to export.',
       vocIds: [],
       exportedVoc: -1,
+      errors: [],
     };
   }
 
@@ -64,7 +66,12 @@ export default class Export extends React.Component<{}, state> {
   };
 
   uploadSvg = async (vocId: number, svg: string) => {
-    console.log(vocId, svg);
+    const response = await axios.post(CM_URL + `/svg/voc/${vocId}`, {svg});
+    if (response.data.error !== '') {
+      this.setState({
+        errors: [...this.state.errors, `${vocId} - ${response.data.error}`]
+      });
+    }
     this.exportNextVoc();
   };
 
@@ -72,6 +79,9 @@ export default class Export extends React.Component<{}, state> {
     return(
       <>
         {this.state.doing}
+        {this.state.errors.map((error, index) => (
+          <p key={index} style={{color: 'red'}}>{error}</p>
+        ))}
       </>
     )
   }
