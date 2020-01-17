@@ -3,6 +3,7 @@ const VOC_HEIGHT = 380;
 const MARGIN_H = 100;
 const MARGIN_V = 200;
 const VOC_PER_ROW = 5;
+const VOC_LOCK_SIZE = 64;
 const TEXT_STYLE_NAME = 'Description';
 
 figma.showUI(__html__, {width: 400, height: 300});
@@ -130,14 +131,22 @@ const  createVoc = (
   frameNode.resize(VOC_WIDTH, VOC_HEIGHT);
   pageVocIds.push(vocId);
 
+  let rectangleNode = figma.createRectangle();
+  rectangleNode.x = frameNode.x;
+  rectangleNode.y = frameNode.y + VOC_HEIGHT + 10;
+  rectangleNode.resize(VOC_LOCK_SIZE, VOC_LOCK_SIZE);
+  rectangleNode.fills = [{type: 'SOLID', color: {r: 1, g: 0.8, b: 0.8}}];
+
+  createLock(frameNode);
+
   let textNode = figma.createText();
-  textNode.x = x;
+  textNode.x = x + VOC_LOCK_SIZE +10;
   textNode.y = y + VOC_HEIGHT + 10;
   textNode.textStyleId = textStyle.id;
   textNode.characters = wordClass;
 
   textNode = figma.createText();
-  textNode.x = x;
+  textNode.x = x + VOC_LOCK_SIZE +10;
   textNode.y = y + VOC_HEIGHT + 50;
   textNode.textStyleId = textStyle.id;
   textNode.characters = title;
@@ -150,7 +159,7 @@ const  createVoc = (
     textNode.textAlignHorizontal = 'RIGHT';
     textNode.characters = position.toString();
   }
-
+  cleanFrame(frameNode);
   whiteBackground(frameNode);
 
   figma.ui.postMessage({
@@ -165,6 +174,15 @@ const getFramePos = () => {
   return [column * (VOC_WIDTH + MARGIN_H), row * (VOC_HEIGHT + MARGIN_V)];
 };
 
+const createLock = (frameNode: FrameNode) => {
+  let rectangleNode = figma.createRectangle();
+  rectangleNode.x = frameNode.x;
+  rectangleNode.y = frameNode.y + VOC_HEIGHT + 10;
+  rectangleNode.resize(VOC_LOCK_SIZE, VOC_LOCK_SIZE);
+  rectangleNode.fills = [{type: 'SOLID', color: {r: 0.8, g: 1, b: 0.8}}];
+  rectangleNode.name = `lock_${frameNode.name}`;
+};
+
 const whiteBackground = (frameNode: FrameNode) => {
   let found = false;
   frameNode.findAll((node => node.type === 'GROUP')).forEach(groupNode => {
@@ -174,6 +192,16 @@ const whiteBackground = (frameNode: FrameNode) => {
     }
   });
   frameNode.backgroundStyleId = backgroundStyle.id;
+};
+
+const cleanFrame = (frameNode: FrameNode) => {
+  if (
+    frameNode.children.length === 1 &&
+    frameNode.children[0].type === 'GROUP'
+  ) {
+    const groupNode = frameNode.children[0] as FrameNode;
+    groupNode.children.forEach(node => frameNode.appendChild(node));
+  }
 };
 
 const getExportSvg = () => {
