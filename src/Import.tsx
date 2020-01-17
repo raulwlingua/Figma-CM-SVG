@@ -118,7 +118,7 @@ export default class Import extends React.Component<{}, state> {
     } else {
       let svg = '';
       try {
-        const response = await axios.get(voc.svg);
+        const response = await axios.get(voc.svg + `?timestamp=${new Date().getTime()}`);
         svg = response.data;
       } catch (e) {
         console.log(e)
