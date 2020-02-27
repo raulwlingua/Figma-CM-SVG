@@ -191,7 +191,7 @@ const whiteBackground = (frameNode: FrameNode) => {
       found = true;
     }
   });
-  frameNode.backgroundStyleId = backgroundStyle.id;
+  //frameNode.backgroundStyleId = backgroundStyle.id;
 };
 
 const cleanFrame = (frameNode: FrameNode) => {
@@ -201,7 +201,19 @@ const cleanFrame = (frameNode: FrameNode) => {
   ) {
     const groupNode = frameNode.children[0] as FrameNode;
     groupNode.children.forEach(node => frameNode.appendChild(node));
+
+    cleanFrame(frameNode);
   }
+
+  //clean white background
+  frameNode.children.forEach(node => {
+    console.log(node.type);
+    console.log(node.name);
+    if (node.type === 'VECTOR' && node.name === 'Vector') {
+      node.remove();
+    }
+  })
+
 };
 
 const getExportSvg = () => {
