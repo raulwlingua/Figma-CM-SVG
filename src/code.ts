@@ -210,7 +210,14 @@ const cleanFrame = (frameNode: FrameNode) => {
     console.log(node.type);
     console.log(node.name);
     if (node.type === 'VECTOR' && node.name === 'Vector') {
-      node.remove();
+      if (
+        node.fills[0] &&
+        node.fills[0].color.b === 1 &&
+        node.fills[0].color.g === 1 &&
+        node.fills[0].color.r === 1)
+      {
+        node.remove();
+      }
     }
   })
 
